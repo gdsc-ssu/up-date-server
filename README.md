@@ -10,10 +10,10 @@
 1. 프로젝트 디렉토리에서 다음 명령어를 실행하여 ZIP 파일을 생성합니다:
 
     ```bash
-    zip -r up-date-cli-server.zip ./
+    zip -u up-date-server.zip -r ./   
     ```
 
-    이 명령은 현재 디렉토리의 모든 파일 및 하위 디렉토리를 `up-date-cli-server.zip`으로 압축합니다.
+    이 명령은 현재 디렉토리의 모든 파일 및 하위 디렉토리를 `up-date-server.zip`으로 압축합니다.
 
 2. 생성된 ZIP 파일을 Lambda 함수에 업로드합니다. 이 과정은 AWS Management Console에서 진행할 수 있습니다.
 
