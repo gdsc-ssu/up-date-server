@@ -13,8 +13,14 @@ class User(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
 
-    # User와 Review 간의 관계 정의
-    reviews = relationship("Review", back_populates="user")
+class Station(Base):
+    __tablename__ = 'station'
+    name = Column(String(255), primary_key=True)
+    line = Column(String(255), nullable=False)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.now())
+    updated_at = Column(DateTime, nullable=False, default=datetime.now(), onupdate=datetime.now())
 
 
 class Place(Base):
@@ -32,9 +38,7 @@ class Place(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.now())
     updated_at = Column(DateTime, nullable=False, default=datetime.now(), onupdate=datetime.now())
     user_id = Column(String(255), ForeignKey('users.id'))  # 외래키 설정
-
-    # Place와 Review 간의 관계 정의
-    reviews = relationship("Review", back_populates="place")
+    station = Column(String(255), ForeignKey('station.name'))  # 외래키 설정
 
 
 class Review(Base):
@@ -46,9 +50,3 @@ class Review(Base):
     star = Column(Integer, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
-
-    # Review와 User 간의 관계 정의
-    user = relationship("User", back_populates="reviews")
-
-    # Review와 Place 간의 관계 정의
-    place = relationship("Place", back_populates="reviews")

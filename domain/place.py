@@ -25,10 +25,10 @@ page_size = 5
 def retrieve_single_place(place_id):
     place = session \
         .query(
-            Place,
-            func.coalesce(func.avg(Review.star), 0).label("average_star"),
-            func.coalesce(func.count(Review.id), 0).label("review_count")
-        ) \
+        Place,
+        func.coalesce(func.avg(Review.star), 0).label("average_star"),
+        func.coalesce(func.count(Review.id), 0).label("review_count")
+    ) \
         .outerjoin(Review) \
         .filter(Place.id == place_id) \
         .first()
@@ -53,6 +53,7 @@ def retrieve_places(places):
                 "longitude": place[0].longitude,
                 "menu": place[0].menu if place[0].menu else None,
                 "url": place[0].url if place[0].url else None,
+                "station": place[0].station,
                 "averageStar": float(place[1]) if place[1] else 0,
                 "reviewCount": int(place[2]) if place[2] else 0,
                 "createdAt": format_datetime(place[0].created_at),
@@ -66,6 +67,7 @@ def retrieve_places(places):
 
 
 def get_check_place(query_string_parameters):
+    # TODO: 가게 이름으로 조회, 역 이름으로 조회 추가하기 -> query_string_parameters 에 추가해서 받으면 댐
     if not query_string_parameters:
         return get_error_schema(400, 'page를 보내주세요.')
 
@@ -75,22 +77,44 @@ def get_check_place(query_string_parameters):
 
     # filter에 위도 경도 추가하기
     if order == 'REVIEW':  # 리뷰수순으로
-        order_by = func.count(Review.id)
-    else:  # 생성일기준으로 장소 조회
-        order_by = Place.created_at
-
-    places = session \
-        .query(
+        places = session \
+            .query(
+                Place,
+                func.avg(Review.star).label("average_star"),
+                func.count(Review.id).label("review_count")
+            ) \
+            .outerjoin(Review) \
+            .group_by(Place.id) \
+            .order_by(desc(func.count(Review.id)), desc(Place.created_at)) \
+            .offset((page - 1) * page_size) \
+            .limit(page_size) \
+            .all()
+    elif order == 'STAR':  # 별점순으로
+        places = session \
+            .query(
             Place,
             func.avg(Review.star).label("average_star"),
             func.count(Review.id).label("review_count")
         ) \
-        .outerjoin(Review) \
-        .group_by(Place.id) \
-        .order_by(desc(order_by)) \
-        .offset((page - 1) * page_size) \
-        .limit(page_size) \
-        .all()
+            .outerjoin(Review) \
+            .group_by(Place.id) \
+            .order_by(desc(func.avg(Review.star)), desc(Place.created_at)) \
+            .offset((page - 1) * page_size) \
+            .limit(page_size) \
+            .all()
+    else:  # 최신순으로
+        places = session \
+            .query(
+            Place,
+            func.avg(Review.star).label("average_star"),
+            func.count(Review.id).label("review_count")
+        ) \
+            .outerjoin(Review) \
+            .group_by(Place.id) \
+            .order_by(desc(Place.created_at)) \
+            .offset((page - 1) * page_size) \
+            .limit(page_size) \
+            .all()
 
     return retrieve_places(places)
 
@@ -116,6 +140,7 @@ def get_check_single_place(path_parameters):
             "longitude": place[0].longitude,
             "menu": place[0].menu if place[0].menu else None,
             "url": place[0].url if place[0].url else None,
+            "station": place[0].station,
             "averageStar": float(place[1]),
             "reviewCount": int(place[2]),
             "createdAt": format_datetime(place[0].created_at),
@@ -127,6 +152,7 @@ def get_check_single_place(path_parameters):
 
 
 def create_place(path_parameters, request_body):
+    # TODO: 가장 가까운 역 계산해서 station에 자동으로 넣어주기
     place = Place(
         name=request_body['name'],
         phone_number=request_body['phoneNumber'],
@@ -137,6 +163,7 @@ def create_place(path_parameters, request_body):
         longitude=request_body['longitude'],
         url=request_body['url'],
         menu=request_body['menu'],
+        station="역 이름",
         user_id=path_parameters['userId']
     )
     session.add(place)
