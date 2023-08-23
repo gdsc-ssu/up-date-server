@@ -92,10 +92,10 @@ def get_check_place(query_string_parameters):
     elif order == 'STAR':  # 별점순으로
         places = session \
             .query(
-            Place,
-            func.avg(Review.star).label("average_star"),
-            func.count(Review.id).label("review_count")
-        ) \
+                Place,
+                func.avg(Review.star).label("average_star"),
+                func.count(Review.id).label("review_count")
+            ) \
             .outerjoin(Review) \
             .group_by(Place.id) \
             .order_by(desc(func.avg(Review.star)), desc(Place.created_at)) \
@@ -105,10 +105,10 @@ def get_check_place(query_string_parameters):
     else:  # 최신순으로
         places = session \
             .query(
-            Place,
-            func.avg(Review.star).label("average_star"),
-            func.count(Review.id).label("review_count")
-        ) \
+                Place,
+                func.avg(Review.star).label("average_star"),
+                func.count(Review.id).label("review_count")
+            ) \
             .outerjoin(Review) \
             .group_by(Place.id) \
             .order_by(desc(Place.created_at)) \
@@ -174,3 +174,6 @@ def create_place(path_parameters, request_body):
     }
 
     return get_success_schema(200, result)
+
+# TODO: 가게 수정하기
+# PUT /places/{placeId}, 그냥 POST /place랑 body 똑같이 받아서 전부 업데이트 하기
