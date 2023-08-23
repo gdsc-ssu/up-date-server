@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import desc
 
 from datetime import datetime
+from domain.entity import Review
 
 from util.response import get_success_schema, get_error_schema
 from util.datetime_util import format_datetime
@@ -26,16 +27,6 @@ Base = declarative_base()
 page_size = 5
 
 
-class Review(Base):
-    __tablename__ = 'review'
-    id = Column(Integer, primary_key=True)
-    content = Column(String(255), nullable=False)
-    user_id = Column(String(255), nullable=False)
-    place_id = Column(Integer, nullable=False)
-    created_at = Column(DateTime, nullable=False, default=datetime.now)
-    updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
-
-
 def retrieve_reviews(reviews):
     if reviews:
         result = []
@@ -44,6 +35,7 @@ def retrieve_reviews(reviews):
             review_data = {
                 "id": review.id,
                 "userId": review.user_id,
+                "star": review.star,
                 "content": review.content,
                 "createdAt": format_datetime(review.created_at)
             }
@@ -91,6 +83,7 @@ def get_my_reviews(path_parameters, query_string_parameters):
 def create_review(path_parameters, request_body):
     review = Review(
         content=request_body['content'],
+        star=int(request_body['star']),
         user_id=path_parameters['userId'],
         place_id=path_parameters['placeId']
     )

@@ -1,10 +1,10 @@
 import dbinfo
 
-from sqlalchemy import create_engine, Column, String, DateTime
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 
 from datetime import datetime
+from domain.entity import User
 
 from util.response import get_success_schema, get_error_schema
 from util.datetime_util import format_datetime
@@ -19,23 +19,17 @@ engine = create_engine(db_url)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-# SQLAlchemy 모델 정의
-Base = declarative_base()
 
-
-class User(Base):
-    __tablename__ = 'users'
-    id = Column(String(255), primary_key=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.now)
-    updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
-
-
-def get_user_by_id(path_parameters):
-    user = session.query(User).filter_by(id=path_parameters["id"]).first()
+def get_user_by_id_and_email(path_parameters):
+    user = session\
+        .query(User)\
+        .filter_by(id=path_parameters['id'], email=path_parameters["email"])\
+        .first()
 
     if user:
         result = {
             "id": user.id,
+            "email": user.email,
             "created_at": format_datetime(user.created_at)
         }
 
@@ -45,12 +39,13 @@ def get_user_by_id(path_parameters):
 
 
 def create_user(request_body):
-    new_user = User(id=request_body['id'])
+    new_user = User(id=request_body['id'], email=request_body['email'])
     session.add(new_user)
     session.commit()
 
     result = {
         "id": new_user.id,
+        "email": new_user.email,
         "createdAt": format_datetime(new_user.created_at)
     }
 
