@@ -53,8 +53,8 @@ def retrieve_places(places):
                 "longitude": place[0].longitude,
                 "menu": place[0].menu if place[0].menu else None,
                 "url": place[0].url if place[0].url else None,
-                "averageStar": float(place[1]),
-                "reviewCount": int(place[2]),
+                "averageStar": float(place[1]) if place[1] else 0,
+                "reviewCount": int(place[2]) if place[2] else 0,
                 "createdAt": format_datetime(place[0].created_at),
                 "updatedAt": format_datetime(place[0].updated_at)
             }
@@ -82,8 +82,8 @@ def get_check_place(query_string_parameters):
     places = session \
         .query(
             Place,
-            func.coalesce(func.avg(Review.star), 0).label("average_star"),
-            func.coalesce(func.count(Review.id), 0).label("review_count")
+            func.avg(Review.star).label("average_star"),
+            func.count(Review.id).label("review_count")
         ) \
         .outerjoin(Review) \
         .group_by(Place.id) \
