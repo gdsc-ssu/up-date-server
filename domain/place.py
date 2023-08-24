@@ -1,13 +1,13 @@
 import dbinfo
 
-from sqlalchemy import create_engine, Column, String, DateTime, Integer, Time, Float
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func, desc
 
 from util.response import get_success_schema, get_error_schema
 from util.datetime_util import format_datetime
 
-from domain.entity import User, Place, Review
+from domain.entity import User, Place, Review, Station
 
 # MySQL 연결 정보 설정
 db_url = f"mysql+pymysql://{dbinfo.db_username}:{dbinfo.db_password}@{dbinfo.db_host}:{dbinfo.db_port}/{dbinfo.db_name}"
