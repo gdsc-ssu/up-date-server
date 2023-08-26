@@ -46,5 +46,7 @@ def route(method, path, path_parameters, query_string_parameters, body):
         return get_check_place(query_string_parameters)
     elif method == 'GET' and path == '/place/{placeId}':
         return get_check_single_place(path_parameters)
+    elif method == 'PUT' and path == '/places/{placeId}':
+        return  update_place(path_parameters, request_body)
     else:
         return get_error_schema(500, '라우팅 정보를 찾지 못했습니다.')

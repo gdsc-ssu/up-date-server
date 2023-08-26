@@ -72,49 +72,31 @@ def get_check_place(query_string_parameters):
         return get_error_schema(400, 'page를 보내주세요.')
 
     page = int(query_string_parameters['page'])
-
     order = query_string_parameters.get('order')
+    store_name = query_string_parameters.get('storeName')
+    station_name = query_string_parameters.get('stationName')
+
+    query = session.query(
+        Place,
+        func.avg(Review.star).label("average_star"),
+        func.count(Review.id).label("review_count")
+    ).outerjoin(Review).group_by(Place.id)
+
+    if store_name:
+        query = query.filter(Place.name.like(f"%{store_name}%"))
+
+    if station_name:
+        query = query.filter(Place.station == station_name)
 
     # filter에 위도 경도 추가하기
-    if order == 'REVIEW':  # 리뷰수순으로
-        places = session \
-            .query(
-                Place,
-                func.avg(Review.star).label("average_star"),
-                func.count(Review.id).label("review_count")
-            ) \
-            .outerjoin(Review) \
-            .group_by(Place.id) \
-            .order_by(desc(func.count(Review.id)), desc(Place.created_at)) \
-            .offset((page - 1) * page_size) \
-            .limit(page_size) \
-            .all()
-    elif order == 'STAR':  # 별점순으로
-        places = session \
-            .query(
-                Place,
-                func.avg(Review.star).label("average_star"),
-                func.count(Review.id).label("review_count")
-            ) \
-            .outerjoin(Review) \
-            .group_by(Place.id) \
-            .order_by(desc(func.avg(Review.star)), desc(Place.created_at)) \
-            .offset((page - 1) * page_size) \
-            .limit(page_size) \
-            .all()
-    else:  # 최신순으로
-        places = session \
-            .query(
-                Place,
-                func.avg(Review.star).label("average_star"),
-                func.count(Review.id).label("review_count")
-            ) \
-            .outerjoin(Review) \
-            .group_by(Place.id) \
-            .order_by(desc(Place.created_at)) \
-            .offset((page - 1) * page_size) \
-            .limit(page_size) \
-            .all()
+    if order == 'REVIEW': #리뷰순
+        query = query.order_by(desc(func.count(Review.id)), desc(Place.created_at))
+    elif order == 'STAR': #별점순
+        query = query.order_by(desc(func.avg(Review.star)), desc(Place.created_at))
+    else:
+        query = query.order_by(desc(Place.created_at))
+
+    places = query.offset((page - 1) * page_size).limit(page_size).all()
 
     return retrieve_places(places)
 
@@ -177,3 +159,35 @@ def create_place(path_parameters, request_body):
 
 # TODO: 가게 수정하기
 # PUT /places/{placeId}, 그냥 POST /place랑 body 똑같이 받아서 전부 업데이트 하기
+def update_place(path_parameters, request_body):
+    place_id = int(path_parameters['placeId'])
+
+    # 데이터베이스에서 기존 가게 정보를 조회합니다.
+    existing_place = session.query(Place).filter(Place.id == place_id).first()
+
+    if not existing_place:
+        return get_error_schema(404, '해당 가게를 찾을 수 없습니다.')
+
+    # 요청 본문의 내용을 기반으로 속성을 업데이트합니다.
+    existing_place.name = request_body['name']
+    existing_place.phone_number = request_body['phoneNumber']
+    existing_place.location = request_body['location']
+    existing_place.start_at = request_body['start_at']
+    existing_place.end_at = request_body['end_at']
+    existing_place.latitude = request_body['latitude']
+    existing_place.longitude = request_body['longitude']
+    existing_place.url = request_body['url']
+    existing_place.menu = request_body['menu']
+
+    # 요청 본문에 'station'이 포함되어 있다면 업데이트합니다.
+    if 'station' in request_body:
+        existing_place.station = request_body['station']
+
+    # 변경사항을 데이터베이스에 반영합니다.
+    session.commit()
+
+    result = {
+        "id": existing_place.id,
+    }
+
+    return get_success_schema(200, result)
