@@ -16,7 +16,6 @@ class User(Base):
 class Station(Base):
     __tablename__ = 'station'
     name = Column(String(255), primary_key=True)
-    line = Column(String(255), nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.now())

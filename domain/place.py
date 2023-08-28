@@ -4,6 +4,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func, desc
 
+from geopy.distance import geodesic
+
 from util.response import get_success_schema, get_error_schema
 from util.datetime_util import format_datetime
 
@@ -25,10 +27,10 @@ page_size = 5
 def retrieve_single_place(place_id):
     place = session \
         .query(
-        Place,
-        func.coalesce(func.avg(Review.star), 0).label("average_star"),
-        func.coalesce(func.count(Review.id), 0).label("review_count")
-    ) \
+            Place,
+            func.coalesce(func.avg(Review.star), 0).label("average_star"),
+            func.coalesce(func.count(Review.id), 0).label("review_count")
+        ) \
         .outerjoin(Review) \
         .filter(Place.id == place_id) \
         .first()
@@ -134,18 +136,27 @@ def get_check_single_place(path_parameters):
 
 
 def create_place(path_parameters, request_body):
-    # TODO: 가장 가까운 역 계산해서 station에 자동으로 넣어주기
+    latitude = request_body['latitude']
+    longitude = request_body['longitude']
+
+    all_stations = session.query(Station).all()
+
+    def calculate_distance(station):
+        return geodesic((latitude, longitude), (station.latitude, station.longitude)).kilometers
+
+    sorted_stations = sorted(all_stations, key=calculate_distance)
+
     place = Place(
         name=request_body['name'],
         phone_number=request_body['phoneNumber'],
         location=request_body['location'],
         start_at=request_body['start_at'],
         end_at=request_body['end_at'],
-        latitude=request_body['latitude'],
-        longitude=request_body['longitude'],
+        latitude=latitude,
+        longitude=longitude,
         url=request_body['url'],
         menu=request_body['menu'],
-        station="역 이름",
+        station=sorted_stations[0].name,
         user_id=path_parameters['userId']
     )
     session.add(place)
