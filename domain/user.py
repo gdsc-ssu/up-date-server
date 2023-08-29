@@ -20,10 +20,10 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-def get_user_by_id_and_email(path_parameters):
+def get_user_by_id_and_email(path_parameters, query_string_parameters):
     user = session\
         .query(User)\
-        .filter_by(id=path_parameters['id'], email=path_parameters["email"])\
+        .filter_by(id=path_parameters['id'], email=query_string_parameters["email"])\
         .first()
 
     if user:

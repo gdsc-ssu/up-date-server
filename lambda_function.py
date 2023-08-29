@@ -31,7 +31,7 @@ def lambda_handler(event, context):
 
 def route(method, path, path_parameters, query_string_parameters, body):
     if method == 'GET' and path == '/user/{id}':
-        return get_user_by_id_and_email(path_parameters)
+        return get_user_by_id_and_email(path_parameters, query_string_parameters)
     elif method == 'POST' and path == '/user':
         return create_user(json.loads(body))
     elif method == 'GET' and path == '/review/place/{placeId}':
