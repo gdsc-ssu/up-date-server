@@ -21,9 +21,9 @@ session = Session()
 
 
 def get_user_by_id_and_email(path_parameters, query_string_parameters):
-    user = session\
-        .query(User)\
-        .filter_by(id=path_parameters['id'], email=query_string_parameters["email"])\
+    user = session \
+        .query(User) \
+        .filter_by(id=path_parameters['userId'], email=query_string_parameters["email"]) \
         .first()
 
     if user:
@@ -41,7 +41,12 @@ def get_user_by_id_and_email(path_parameters, query_string_parameters):
 def create_user(request_body):
     new_user = User(id=request_body['id'], email=request_body['email'])
     session.add(new_user)
-    session.commit()
+
+    try:
+        session.commit()
+    except:
+        session.rollback()
+        raise
 
     result = {
         "id": new_user.id,

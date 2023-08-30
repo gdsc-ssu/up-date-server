@@ -88,7 +88,12 @@ def create_review(path_parameters, request_body):
         place_id=path_parameters['placeId']
     )
     session.add(review)
-    session.commit()
+
+    try:
+        session.commit()
+    except:
+        session.rollback()
+        raise
 
     result = {
         "id": review.id,
