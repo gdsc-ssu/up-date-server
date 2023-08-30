@@ -75,8 +75,8 @@ def get_check_place(query_string_parameters):
 
     page = int(query_string_parameters['page'])
     order = query_string_parameters.get('order')
-    store_name = query_string_parameters.get('storeName')
-    station_name = query_string_parameters.get('stationName')
+    store_name = query_string_parameters.get('store')
+    station_name = query_string_parameters.get('station')
 
     query = session.query(
         Place,
@@ -90,7 +90,6 @@ def get_check_place(query_string_parameters):
     if station_name:
         query = query.filter(Place.station == station_name)
 
-    # filter에 위도 경도 추가하기
     if order == 'REVIEW': #리뷰순
         query = query.order_by(desc(func.count(Review.id)), desc(Place.created_at))
     elif order == 'STAR': #별점순
@@ -160,7 +159,12 @@ def create_place(path_parameters, request_body):
         user_id=path_parameters['userId']
     )
     session.add(place)
-    session.commit()
+
+    try:
+        session.commit()
+    except:
+        session.rollback()
+        raise
 
     result = {
         "id": place.id,
@@ -190,12 +194,12 @@ def update_place(path_parameters, request_body):
     existing_place.url = request_body['url']
     existing_place.menu = request_body['menu']
 
-    # 요청 본문에 'station'이 포함되어 있다면 업데이트합니다.
-    if 'station' in request_body:
-        existing_place.station = request_body['station']
-
     # 변경사항을 데이터베이스에 반영합니다.
-    session.commit()
+    try:
+        session.commit()
+    except:
+        session.rollback()
+        raise
 
     result = {
         "id": existing_place.id,

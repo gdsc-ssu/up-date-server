@@ -2,7 +2,7 @@ import json
 
 from domain.user import get_user_by_id_and_email, create_user
 from domain.review import get_reviews_by_place, get_my_reviews, create_review
-from domain.place import get_check_place, get_check_single_place, create_place
+from domain.place import get_check_place, get_check_single_place, create_place, update_place
 from util.response import get_error_schema
 
 
@@ -30,7 +30,7 @@ def lambda_handler(event, context):
 
 
 def route(method, path, path_parameters, query_string_parameters, body):
-    if method == 'GET' and path == '/user/{id}':
+    if method == 'GET' and path == '/user/{userId}':
         return get_user_by_id_and_email(path_parameters, query_string_parameters)
     elif method == 'POST' and path == '/user':
         return create_user(json.loads(body))
@@ -38,15 +38,15 @@ def route(method, path, path_parameters, query_string_parameters, body):
         return get_reviews_by_place(path_parameters, query_string_parameters)
     elif method == 'GET' and path == '/review/user/{userId}':
         return get_my_reviews(path_parameters, query_string_parameters)
-    elif method == 'POST' and path == '/review/{userId}/{placeId}':
+    elif method == 'POST' and path == '/review/user/{userId}/place/{placeId}':
         return create_review(path_parameters, json.loads(body))
-    elif method == 'POST' and path == '/place/{userId}':
+    elif method == 'POST' and path == '/place/user/{userId}':
         return create_place(path_parameters, json.loads(body))
     elif method == 'GET' and path == '/place':
         return get_check_place(query_string_parameters)
     elif method == 'GET' and path == '/place/{placeId}':
         return get_check_single_place(path_parameters)
-    elif method == 'PUT' and path == '/places/{placeId}':
-        return  update_place(path_parameters, request_body)
+    elif method == 'PUT' and path == '/place/{placeId}':
+        return update_place(path_parameters, json.loads(body))
     else:
         return get_error_schema(500, '라우팅 정보를 찾지 못했습니다.')
