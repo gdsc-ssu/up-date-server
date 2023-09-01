@@ -28,7 +28,6 @@ page_size = 5
 
 
 def retrieve_reviews(reviews):
-    if reviews:
         result = []
 
         for review in reviews:
@@ -42,8 +41,6 @@ def retrieve_reviews(reviews):
             result.append(review_data)
 
         return get_success_schema(200, result)
-    else:
-        return get_error_schema(404, '리뷰가 존재하지 않습니다.')
 
 
 def get_reviews_by_place(path_parameters, query_string_parameters):
